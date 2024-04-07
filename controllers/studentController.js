@@ -1,92 +1,153 @@
 'use strict';
 
 const firebase = require('../db');
-const Student = require('../models/student');
-const firestore = firebase.firestore();
+const db = firebase.firestore();
 
-
-const addStudent = async (req, res, next) => {
-    try {
-        const data = req.body;
-        await firestore.collection('students').doc().set(data);
-        res.send('Record saved successfuly');
-    } catch (error) {
-        res.status(400).send(error.message);
+const getAuthors = async (req, res) => {
+    try{
+        const userRef = await  db.collection("1").get()
+        let usersData = [];
+        userRef.forEach((doc)=> {
+            usersData.push({...doc.data(), id: doc.id})
+        })
+        // console.log(usersData);
+        res.status(200).send(usersData);
+        
+    }catch (e){
+        console.log(`Error getting documents ${e}`);
+        res.status(500).json({"error": `Error getting documents ${e}`});
     }
 }
 
-const getAllStudents = async (req, res, next) => {
+const getUsers = async (req, res) => {
+    try{
+        const userRef = await  db.collection("2").get()
+        let usersData = [];
+        userRef.forEach((doc)=> {
+            usersData.push({...doc.data(), id: doc.id})
+        })
+        // console.log(usersData);
+        res.status(200).send(usersData);
+        
+    }catch (e){
+        console.log(`Error getting documents ${e}`);
+        res.status(500).json({"error": `Error getting documents ${e}`});
+    }
+}
+
+const getBooks = async (req, res) => {
+    try{
+        const bookRef = await  db.collection("3").get()
+        let booksData = [];
+        bookRef.forEach((doc)=> {
+            booksData.push({...doc.data(), id: doc.id})
+        })
+        // console.log(usersData);
+        res.status(200).send(booksData);
+        
+    }catch (e){
+        console.log(`Error getting documents ${e}`);
+        res.status(500).json({"error": `Error getting documents ${e}`});
+    }
+}
+
+const addAuthor = async (req, res) => {
+    const newUser = req.body;
     try {
-        const students = await firestore.collection('students');
-        const data = await students.get();
-        const studentsArray = [];
-        if(data.empty) {
-            res.status(404).send('No student record found');
-        }else {
-            data.forEach(doc => {
-                const student = new Student(
-                    doc.id,
-                    doc.data().firstName,
-                    doc.data().lastName,
-                    doc.data().fatherName,
-                    doc.data().class,
-                    doc.data().age,
-                    doc.data().phoneNumber,
-                    doc.data().subject,
-                    doc.data().year,
-                    doc.data().semester,
-                    doc.data().status
-                );
-                studentsArray.push(student);
-            });
-            res.send(studentsArray);
+        const userCountSnapshot = await db.collection('1').get();
+        const userCount = userCountSnapshot.size;
+        const newUserId = (userCount + 1).toString();
+        await db.collection('1').doc(newUserId).set(newUser);
+        res.status(201).json(newUser);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "There was an error adding the user." });
+    }
+}
+
+const addUser = async (req, res) => {
+    const newUser = req.body;
+    try {
+        const userCountSnapshot = await db.collection('2').get();
+        const userCount = userCountSnapshot.size;
+        const newUserId = (userCount + 1).toString();
+        await db.collection('2').doc(newUserId).set(newUser);
+        res.status(201).json(newUser);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "There was an error adding the user." });
+    }
+}
+
+const addBook = async (req, res) => {
+    const newUser = req.body;
+    try {
+        const userCountSnapshot = await db.collection('3').get();
+        const userCount = userCountSnapshot.size;
+        const newUserId = (userCount + 1).toString();
+        await db.collection('3').doc(newUserId).set(newUser);
+        res.status(201).json(newUser);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "There was an error adding the user." });
+    }
+}
+
+const deleteAuthor = async (req, res) => {
+    const authorID = req.params.id;   
+    try {
+        const doc = await db.collection("1").doc(authorID).get()
+        if(!doc.exists){
+            return res.status(400).json({ error: 'No such author exists.' })
         }
+        await db.collection("1").doc(authorID).delete();
+        res.status(200).json(true);
     } catch (error) {
-        res.status(400).send(error.message);
+        console.log(error);
+        res.status(500).json({ error: "Error deleting the author" });
     }
 }
 
-const getStudent = async (req, res, next) => {
-    try {
-        const id = req.params.id;
-        const student = await firestore.collection('students').doc(id);
-        const data = await student.get();
-        if(!data.exists) {
-            res.status(404).send('Student with the given ID not found');
-        }else {
-            res.send(data.data());
+const deleteUser = async (req, res) => {
+    const userID = req.params.id;
+    try{
+        const doc = await db.collection("2").doc(userID).get();
+        if (!doc.exists) {
+            return res.status(400).json({ error: "No user found!" });
         }
-    } catch (error) {
-        res.status(400).send(error.message);
+        await db.collection("2").doc(userID).delete();
+        res.status(200).json(true);
+    }catch(e){
+        console.log(e);
+        res.status(500).json({ error: "Error deleting the User" });
     }
 }
 
-const updateStudent = async (req, res, next) => {
-    try {
-        const id = req.params.id;
-        const data = req.body;
-        const student =  await firestore.collection('students').doc(id);
-        await student.update(data);
-        res.send('Student record updated successfuly');        
-    } catch (error) {
-        res.status(400).send(error.message);
+const deleteBook = async (req, res) => {
+    let bookIDS = req.body.bookIDs;
+    console.log(bookIDS);
+    
+    for (let i=0; i < bookIDS.length; i++) {
+        try {
+            const doc = await db.collection("3").doc(bookIDS[i].toString()).get();
+            await db.collection("3").doc(bookIDS[i].toString()).delete();
+            res.status(200).json(true);
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({ error: "Error deleting the Book" });
+        }
     }
-}
-
-const deleteStudent = async (req, res, next) => {
-    try {
-        const id = req.params.id;
-        await firestore.collection('students').doc(id).delete();
-        res.send('Record deleted successfuly');
-    } catch (error) {
-        res.status(400).send(error.message);
-    }
+    res.sendStatus(200);
 }
 
 module.exports = {
-    addStudent,
-    getAllStudents,
-    getStudent,
-    updateStudent,
-    deleteStudent
+    getAuthors,
+    getBooks,
+    getUsers,
+    addAuthor,
+    addUser,
+    addBook,
+    deleteAuthor,
+    deleteBook,
+    deleteUser
 }
