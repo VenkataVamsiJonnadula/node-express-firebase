@@ -9,8 +9,11 @@ const app = express();
 app.use(express.json());
 app.use(cors({
   origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+
     const allowedOrigins = ['http://localhost:4200', 'https://your-angular-app.firebaseapp.com'];
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
