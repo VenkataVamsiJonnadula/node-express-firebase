@@ -12,7 +12,7 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
 
-    const allowedOrigins = ['http://localhost:4200', 'https://your-angular-app.firebaseapp.com'];
+    const allowedOrigins = ['http://localhost:4200', 'https://sri-vijayalakshmi-jewellers.firebaseapp.com'];
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
